@@ -1,0 +1,45 @@
+. Il flusso è: build locale, scansione, push, firma. La scansione avviene prima del push, così un'immagine vulnerabile non arriva mai al registry.
+name: publish
+on:
+  push:
+    branches: [main]
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Nome immagine in minuscolo
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+      - uses: docker/setup-buildx-action@v3
+      - name: Build locale per la scansione
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: lab01:scan
+      - name: Scansione Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: lab01:scan
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: '1'
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push su GHCR
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ env.IMAGE }}:${{ github.sha }}
+      - uses: sigstore/cosign-installer@v3
+      - name: Firma l'immagine
+        run: cosign sign --yes ${{ env.IMAGE }}@${{ steps.push.outputs.digest }}
