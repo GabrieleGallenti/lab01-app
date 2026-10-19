@@ -1,4 +1,3 @@
-. Il flusso è: build locale, scansione, push, firma. La scansione avviene prima del push, così un'immagine vulnerabile non arriva mai al registry.
 name: publish
 on:
   push:
