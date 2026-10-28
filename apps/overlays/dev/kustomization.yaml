@@ -1,0 +1,13 @@
+# apps/overlays/dev/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base/api
+patches:
+  - target:
+      kind: HelmRelease
+      name: api
+    patch: |
+      - op: add
+        path: /spec/values/replicaCount
+        value: 2
