@@ -53,3 +53,22 @@ jobs:
       - uses: sigstore/cosign-installer@v3
       - name: Firma l'immagine
         run: cosign sign --yes ${{ env.IMAGE }}@${{ steps.push.outputs.digest }}
+
+  promote:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: GabrieleGallenti/gitops-config
+          token: ${{ secrets.GITOPS_TOKEN }}
+      - name: Aggiorna il tag immagine
+        run: |
+          sed -i 's|tag: ".*"|tag: "${{ github.sha }}"|' apps/base/api/release.yaml
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITOPS_TOKEN }}
+          branch: bump-${{ github.sha }}
+          commit-message: "chore: bump api to ${{ github.sha }}"
+          title: "Deploy api ${{ github.sha }}"
+          body: "Aggiornamento automatico dal CI"
