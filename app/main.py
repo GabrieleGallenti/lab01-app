@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from prometheus_fastapi_instrumentator import Instrumentator
 
 app = FastAPI()
@@ -13,7 +13,3 @@ def work():
 @app.get("/health")
 def health():
     return {"status": "ok", "version": "1.1"}
-
-@app.get("/fail")
-def fail():
-    raise HTTPException(status_code=500, detail="errore di prova")
