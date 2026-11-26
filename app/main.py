@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from prometheus_fastapi_instrumentator import Instrumentator
 
 app = FastAPI()
